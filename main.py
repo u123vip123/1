@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+
 import os
 import random
-import time
 import logging
+import time
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import (
@@ -15,7 +16,7 @@ from telegram.ext import (
 # ======================= 日志 ============================
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,6 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
     raise RuntimeError("❌ 未设置 BOT_TOKEN")
-
 
 # ======================= 主菜单 ============================
 def main_menu():
@@ -48,8 +48,7 @@ def main_menu():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
-# ======================= 各子菜单 ============================
+# ======================= 子菜单 ============================
 def mood_menu():
     keyboard = [
         [
@@ -63,7 +62,6 @@ def mood_menu():
         [InlineKeyboardButton("⬅ 返回主菜单", callback_data="back_main")],
     ]
     return InlineKeyboardMarkup(keyboard)
-
 
 def knowledge_menu():
     keyboard = [
@@ -79,7 +77,6 @@ def knowledge_menu():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
 def games_menu():
     keyboard = [
         [
@@ -94,84 +91,28 @@ def games_menu():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
-# ======================= /start 文案（极高内容密度） ============================
-
-START_TEXT = """
-👋 欢迎来到 **《DailyLife Pro · 日常助手》**！
-
-这里集合了 *轻松、实用、健康、安全* 的日常功能，让你的碎片时间也能变得有意义👇
-
-🌤 **今日概览**
-• 一句话天气感受
-• 今日建议与小提醒
-• 一个轻量行动小目标
-
-😊 **情绪工具**
-• 心情一句话生成器  
-• 颜色心情提示  
-• 30 秒轻放松练习  
-• 温柔语录  
-
-🧠 **心智小任务**
-• 专注练习  
-• 思维小谜题  
-• 习惯微行动  
-• 小目标生成器  
-
-📚 **轻知识百科**
-• 随机有趣小知识  
-• 生活小常识  
-• 趣味科学  
-• 字词小科普  
-
-🎮 **小游戏区**
-• 石头剪刀布  
-• 掷骰子  
-• 数字猜谜  
-• 表情组合  
-
-📝 **每日卡片**
-• 今日提示卡  
-• 灵感卡  
-• 关怀卡  
-• 小目标卡  
-
-✨ **随机灵感**
-• 灵感句子  
-• 创意火花  
-• 随机建议  
-
-⏳ **专注 30 秒**
-• 引导你快速进入短专注状态
-
-🔔 **休息提醒**
-• 轻柔的放松建议
-
-本机器人为轻娱乐与日常助手用途，内容健康，不含奖励、博彩、金融等任何敏感内容。
-
-👇 点击下方菜单开始体验！
-"""
-
+# ======================= /start 文案 ============================
+START_TEXT = (
+    "👋 欢迎来到 **DailyLife Pro · 日常助手**！\n\n"
+    "这是一个轻量、健康、无任何敏感内容的日常陪伴机器人 🌿\n\n"
+    "👇 点击下方菜单开始体验吧！"
+)
 
 # ======================= 指令 ============================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        START_TEXT, reply_markup=main_menu(), parse_mode="Markdown"
+        START_TEXT,
+        reply_markup=main_menu(),
+        parse_mode="Markdown",
     )
-
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "📝 使用说明：发送 /start 打开主菜单即可使用全部功能。"
-    )
-
+    await update.message.reply_text("发送 /start 打开主菜单即可使用全部功能")
 
 async def about_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "《DailyLife Pro》是一款轻娱乐与小工具结合的健康机器人，适合所有用户使用。"
+        "DailyLife Pro 是一款轻娱乐 + 日常助手机器人"
     )
-
 
 # ======================= 按钮处理 ============================
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -179,47 +120,36 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     await query.answer()
 
+    # 返回主菜单
     if data == "back_main":
         await query.edit_message_text("🏠 主菜单", reply_markup=main_menu())
         return
 
+    # 今日概览
     if data == "today":
-        text = "📅 今日建议：\n\n慢慢来，已经很好了 🌱"
-        await query.edit_message_text(text, reply_markup=main_menu())
-        return
-
-    if data == "inspiration":
-        ideas = [
-            "给未来自己一句话",
-            "拍一张今天的天空",
-            "写下一件感恩的小事",
+        summaries = [
+            "今天适合做一件一直想做但没开始的小事。",
+            "保持轻松，慢慢来已经很好。",
+            "不必把今天过得完美，过得舒适就好。",
         ]
-        await query.edit_message_text(
-            "✨ 随机灵感：\n\n" + random.choice(ideas),
-            reply_markup=main_menu(),
+        goals = [
+            "整理桌面 1 分钟",
+            "喝一杯水",
+            "发一句问候给朋友",
+            "写一行文字",
+        ]
+        text = (
+            "📅 今日概览\n\n"
+            f"• 今日建议：{random.choice(summaries)}\n"
+            f"• 今日小目标：{random.choice(goals)}\n"
+            "• 记得给自己一点轻松时间 🌿"
         )
-        return
-
-    if data == "focus":
-        await query.edit_message_text(
-            "⏳ 专注 30 秒\n\n深呼吸，安静一下",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("完成了", callback_data="back_main")]]
-            ),
-        )
-        return
- **今日概览**
-
-• 今日建议：{random.choice(summaries)}
-• 今日小目标：{random.choice(goals)}
-• 记得给自己一点轻松时间 🌿
-"""
-        await query.edit_message_text(text, reply_markup=main_menu(), parse_mode="Markdown")
+        await query.edit_message_text(text, reply_markup=main_menu())
         return
 
     # 情绪工具
     if data == "mood":
-        await query.edit_message_text("😊 情绪工具：", reply_markup=mood_menu())
+        await query.edit_message_text("😊 情绪工具", reply_markup=mood_menu())
         return
 
     if data == "mood_sentence":
@@ -269,7 +199,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 知识
     if data == "knowledge":
-        await query.edit_message_text("📚 轻知识百科：", reply_markup=knowledge_menu())
+        await query.edit_message_text("📚 轻知识百科", reply_markup=knowledge_menu())
         return
 
     if data == "know_fact":
@@ -284,116 +214,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    if data == "know_life":
-        tips = [
-            "睡前 1 小时不要玩手机，有助于睡眠。",
-            "牙刷使用 3 个月需要更换。",
-            "喝水分多次喝比一次喝很多更好。",
-        ]
-        await query.edit_message_text(
-            "🌱 生活常识：\n\n" + random.choice(tips),
-            reply_markup=knowledge_menu(),
-        )
-        return
-
-    if data == "know_science":
-        sci = [
-            "闪电的温度比太阳表面还高五倍。",
-            "企鹅会终生伴侣。",
-            "一朵云的重量可达数百吨。",
-        ]
-        await query.edit_message_text(
-            "🧪 趣味科学：\n\n" + random.choice(sci),
-            reply_markup=knowledge_menu(),
-        )
-        return
-
-    if data == "know_word":
-        words = [
-            "“松弛感”指内在安定、外在从容。",
-            "“治愈系”指让人情绪恢复的风格。",
-        ]
-        await query.edit_message_text(
-            "🔤 字词小科普：\n\n" + random.choice(words),
-            reply_markup=knowledge_menu(),
-        )
-        return
-
     # 小游戏
     if data == "games":
-        await query.edit_message_text("🎮 小游戏区：", reply_markup=games_menu())
-        return
-
-    if data == "game_rps":
-        keyboard = [
-            [
-                InlineKeyboardButton("✊", callback_data="rps_rock"),
-                InlineKeyboardButton("✋", callback_data="rps_paper"),
-                InlineKeyboardButton("✌", callback_data="rps_scissors"),
-            ],
-            [InlineKeyboardButton("⬅ 返回", callback_data="games")],
-        ]
-        await query.edit_message_text("✊ 石头剪刀布：", reply_markup=InlineKeyboardMarkup(keyboard))
-        return
-
-    if data.startswith("rps_"):
-        bot_choice = random.choice(["rock", "paper", "scissors"])
-        user_choice = data.split("_")[1]
-
-        emoji = {"rock": "✊", "paper": "✋", "scissors": "✌"}
-
-        if user_choice == bot_choice:
-            result = "平局 🎯"
-        elif (
-            (user_choice == "rock" and bot_choice == "scissors")
-            or (user_choice == "paper" and bot_choice == "rock")
-            or (user_choice == "scissors" and bot_choice == "paper")
-        ):
-            result = "你赢了 ✨"
-        else:
-            result = "我赢了 😆"
-
-        text = f"你：{emoji[user_choice]}\n我：{emoji[bot_choice]}\n\n{result}"
-        await query.edit_message_text(text, reply_markup=games_menu())
+        await query.edit_message_text("🎮 小游戏区", reply_markup=games_menu())
         return
 
     if data == "game_dice":
         await query.edit_message_text(
-            f"🎲 你掷出了 {random.randint(1,6)} 点。",
-            reply_markup=games_menu(),
-        )
-        return
-
-    if data == "game_guess":
-        num = random.randint(1, 5)
-        context.user_data["guess"] = num
-        keyboard = [
-            [
-                InlineKeyboardButton(str(i), callback_data=f"guess_{i}")
-                for i in range(1, 6)
-            ],
-            [InlineKeyboardButton("⬅ 返回", callback_data="games")],
-        ]
-        await query.edit_message_text(
-            "我想了 1~5 之间的数字，你来猜：",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
-        return
-
-    if data.startswith("guess_"):
-        user = int(data.split("_")[1])
-        correct = context.user_data.get("guess")
-        if user == correct:
-            msg = "🎉 你猜对了！"
-        else:
-            msg = f"😄 没猜中，我想的是 {correct}"
-        await query.edit_message_text(msg, reply_markup=games_menu())
-        return
-
-    if data == "game_emoji":
-        emo = random.sample(["😀","😎","🎉","⭐","🌈","🔥","🍀","🤗","🤩"], 5)
-        await query.edit_message_text(
-            "😊 表情组合：\n\n" + " ".join(emo),
+            f"🎲 你掷出了 {random.randint(1,6)} 点",
             reply_markup=games_menu(),
         )
         return
@@ -406,53 +234,46 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "自我关怀卡：\n\n允许自己慢下来，不必完美。",
             "小目标卡：\n\n10 分钟内能完成的小事情，做一件就好。",
         ]
-        await query.edit_message_text("📝 " + random.choice(cards), reply_markup=main_menu())
+        await query.edit_message_text(
+            "📝 " + random.choice(cards),
+            reply_markup=main_menu(),
+        )
         return
 
     # 灵感
     if data == "inspiration":
-        ins = [
-            "试着拍一张“今天的颜色”的照片。",
-            "想一件你很久没做但想做的事。",
+        ideas = [
             "给未来自己一句话。",
+            "拍一张今天的天空。",
+            "写下一件感恩的小事。",
         ]
         await query.edit_message_text(
-            "✨ 随机灵感：\n\n" + random.choice(ins),
+            "✨ 随机灵感：\n\n" + random.choice(ideas),
             reply_markup=main_menu(),
         )
         return
 
-    # 30 秒专注
+    # 专注
     if data == "focus":
-        context.user_data["focus_start"] = time.time()
         await query.edit_message_text(
-            "⏳ 专注练习开始：\n\n保持安静 30 秒，我会提醒你结束。",
+            "⏳ 专注 30 秒\n\n深呼吸，安静一下",
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("我完成了", callback_data="focus_done")]]
+                [[InlineKeyboardButton("完成了", callback_data="back_main")]]
             ),
-        )
-        return
-
-    if data == "focus_done":
-        await query.edit_message_text(
-            "👏 做得很好！感谢你给自己一点专注时间。",
-            reply_markup=main_menu(),
         )
         return
 
     # 休息提醒
     if data == "relax":
         await query.edit_message_text(
-            "🔔 休息提醒：\n\n站起来走走、喝口水、活动一下肩颈吧。",
+            "🔔 休息提醒：\n\n站起来走走，喝口水，活动一下肩颈吧。",
             reply_markup=main_menu(),
         )
         return
 
-
 # ======================= 启动入口 ============================
 def main():
-    logger.info("🤖 Bot 正在启动...")
-
+    logger.info("🤖 Bot 启动中...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
@@ -464,7 +285,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # 防止进程退出
-    while True:
-        time.sleep(3600)
