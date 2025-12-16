@@ -208,7 +208,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         )
         return
-📅 **今日概览**
+ **今日概览**
 
 • 今日建议：{random.choice(summaries)}
 • 今日小目标：{random.choice(goals)}
