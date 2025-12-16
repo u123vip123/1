@@ -30,10 +30,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @app.post(f"/webhook/{BOT_TOKEN}")
-async def telegram_webhook():
-    update = Update.de_json(request.json, tg_app.bot)
-    await tg_app.process_update(update)
-    return "ok"
+def webhook():
+    update = Update.de_json(request.get_json(force=True), bot.application.bot)
+
+    # 手动执行 async
+    bot.application.create_task(
+        bot.application.process_update(update)
+    )
+
+    return "OK", 200
+
 
 
 # ======================
