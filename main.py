@@ -1,39 +1,48 @@
 import os
-import random
 import time
-import logging
+import random
 import asyncio
+import logging
 
 from flask import Flask, request
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
+from telegram import (
+    Update,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from telegram.ext import (
+    Application,
     ApplicationBuilder,
-    ContextTypes,
     CommandHandler,
     CallbackQueryHandler,
+    ContextTypes,
 )
 
-# ======================= 基础配置 ============================
+# ======================= 基础配置 =======================
+
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
 BOT_TOKENS = os.getenv("BOT_TOKENS")
 if not BOT_TOKENS:
-    raise RuntimeError("❌ BOT_TOKENS 未设置")
+    raise RuntimeError("BOT_TOKENS 未设置")
 
-TOKENS = [t.strip() for t in BOT_TOKENS.split(",") if t.strip()]
+TOKENS = [t.strip() for t in BOT_TOKENS.split(",")]
 
 PORT = int(os.getenv("PORT", 10000))
 
 app = Flask(__name__)
 
-# 保存所有 bot Application
-BOT_APPS = {}
+BOT_APPS: dict[str, Application] = {}
+MAIN_LOOP: asyncio.AbstractEventLoop | None = None
 
-# ======================= 菜单 ============================
+
+# ======================= 菜单 =======================
+
 def main_menu():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📅 今日概览", callback_data="today")],
@@ -98,15 +107,24 @@ def games_menu():
     ])
 
 
-# ======================= 文案 ============================
-START_TEXT = """👋 欢迎来到《DailyLife Pro · 日常助手》
-👇 点击菜单开始体验"""
+# ======================= 文案 =======================
+
+START_TEXT = """
+👋 欢迎来到 **DailyLife Pro · 日常助手**
+
+一个轻松、健康、无敏感内容的日常工具机器人。
+
+👇 点击下方菜单开始体验
+"""
 
 
-# ======================= 指令 ============================
+# ======================= 指令 =======================
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        START_TEXT, reply_markup=main_menu(), parse_mode="Markdown"
+        START_TEXT,
+        reply_markup=main_menu(),
+        parse_mode="Markdown",
     )
 
 
@@ -115,10 +133,11 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def about_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("DailyLife Pro · 健康轻娱乐机器人")
+    await update.message.reply_text("DailyLife Pro · 轻娱乐日常助手")
 
 
-# ======================= 按钮处理（原逻辑不变） ============================
+# ======================= 按钮处理（完整） =======================
+
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     data = query.data
@@ -130,7 +149,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "today":
         await query.edit_message_text(
-            "📅 今天适合做一件小事 🌱", reply_markup=main_menu()
+            "📅 今日概览\n\n慢慢来，今天已经很好了。",
+            reply_markup=main_menu(),
         )
         return
 
@@ -138,20 +158,93 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("😊 情绪工具", reply_markup=mood_menu())
         return
 
+    if data == "mood_sentence":
+        await query.edit_message_text(
+            random.choice([
+                "你已经做得很好了。",
+                "慢一点也没关系。",
+                "对自己温柔一点。",
+            ]),
+            reply_markup=mood_menu(),
+        )
+        return
+
+    if data == "mood_color":
+        await query.edit_message_text(
+            random.choice([
+                "🔵 蓝色：安静",
+                "🟢 绿色：恢复",
+                "🟡 黄色：轻快",
+            ]),
+            reply_markup=mood_menu(),
+        )
+        return
+
     if data == "knowledge":
-        await query.edit_message_text("📚 轻知识", reply_markup=knowledge_menu())
+        await query.edit_message_text("📚 轻知识百科", reply_markup=knowledge_menu())
+        return
+
+    if data == "know_fact":
+        await query.edit_message_text(
+            random.choice([
+                "蜂蜜不会变质",
+                "章鱼有三颗心脏",
+                "云也有重量",
+            ]),
+            reply_markup=knowledge_menu(),
+        )
         return
 
     if data == "games":
         await query.edit_message_text("🎮 小游戏", reply_markup=games_menu())
         return
 
+    if data == "game_dice":
+        await query.edit_message_text(
+            f"🎲 你掷出了 {random.randint(1,6)}",
+            reply_markup=games_menu(),
+        )
+        return
 
-# ======================= Flask 路由 ============================
-@app.get("/")
-def health():
-    return "OK", 200
+    if data == "daily_card":
+        await query.edit_message_text(
+            "📝 今日卡片：\n\n做一件小到不会失败的事。",
+            reply_markup=main_menu(),
+        )
+        return
 
+    if data == "inspiration":
+        await query.edit_message_text(
+            "✨ 灵感：\n\n给未来的自己一句话。",
+            reply_markup=main_menu(),
+        )
+        return
+
+    if data == "focus":
+        await query.edit_message_text(
+            "⏳ 专注 30 秒开始",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("我完成了", callback_data="focus_done")]]
+            ),
+        )
+        return
+
+    if data == "focus_done":
+        await query.edit_message_text(
+            "👏 做得很好",
+            reply_markup=main_menu(),
+        )
+        return
+
+    if data == "relax":
+        await query.edit_message_text(
+            "🔔 休息一下，喝口水",
+            reply_markup=main_menu(),
+        )
+        return
+
+
+# ======================= Webhook =======================
 
 @app.post("/webhook/<token>")
 def webhook(token):
@@ -161,15 +254,23 @@ def webhook(token):
     bot_app = BOT_APPS[token]
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
 
-    # 在事件循环中处理 update
-    bot_app.create_task(bot_app.process_update(update))
+    asyncio.run_coroutine_threadsafe(
+        bot_app.process_update(update),
+        MAIN_LOOP,
+    )
+
     return "OK", 200
 
 
-# ======================= 初始化 Bots ============================
+# ======================= 初始化 =======================
+
 async def init_bots():
     for token in TOKENS:
-        application = ApplicationBuilder().token(token).build()
+        application = (
+            ApplicationBuilder()
+            .token(token)
+            .build()
+        )
 
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CommandHandler("help", help_cmd))
@@ -180,13 +281,17 @@ async def init_bots():
         await application.start()
 
         BOT_APPS[token] = application
-        logger.info(f"✅ Bot 初始化完成: {token[:10]}***")
+
+    logger.info(f"✅ 已启动 {len(BOT_APPS)} 个 Bot")
 
 
-# ======================= 主入口 ============================
+# ======================= 主入口 =======================
+
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    MAIN_LOOP = loop
+
     loop.run_until_complete(init_bots())
 
-    logger.info(f"🚀 Flask Webhook 服务启动，端口 {PORT}")
     app.run(host="0.0.0.0", port=PORT)
